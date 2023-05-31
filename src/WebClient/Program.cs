@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -13,7 +14,9 @@ namespace WebClient
 
         static async Task Main(string[] args)
         {
+            ConsoleSetup();
             ClientSetup();
+
             long customerId = GetCustomerId();
             await GetExistingCustomerAsync(customerId);
 
@@ -24,9 +27,15 @@ namespace WebClient
             Console.ReadLine();
         }
 
+        private static void ConsoleSetup()
+        {
+            Console.OutputEncoding = System.Text.Encoding.Unicode;
+            Console.InputEncoding = System.Text.Encoding.Unicode;
+        }
+
         private static void ClientSetup()
         {
-            client.BaseAddress = new Uri("http://localhost");
+            client.BaseAddress = new Uri("https://localhost:5001");
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         }
@@ -43,7 +52,7 @@ namespace WebClient
 
         private static async Task GetExistingCustomerAsync(long customerId)
         {
-            string endpoint = $"{customerId}";
+            string endpoint = $"customers/{customerId}";
             HttpResponseMessage response = await client.GetAsync(endpoint);
 
             if (response.IsSuccessStatusCode)
@@ -51,6 +60,10 @@ namespace WebClient
                 string responseBody = await response.Content.ReadAsStringAsync();
                 Customer customer = JsonConvert.DeserializeObject<Customer>(responseBody);
                 Console.WriteLine($"Найден клиент ID: {customer.Id}, Имя {customer.Firstname}, Фамилия: {customer.Lastname}");
+            }
+            else if (response.StatusCode.Equals(HttpStatusCode.NotFound))
+            {
+                Console.WriteLine($"Клиент с id {customerId} не найден.");
             }
             else
             {
@@ -74,7 +87,7 @@ namespace WebClient
 
         private static async Task<long> CreateNewCustomerAsync(CustomerCreateRequest customer)
         {
-            string endpoint = "create";
+            string endpoint = "customers/create";
             HttpResponseMessage response = await client.PostAsJsonAsync(endpoint, customer);
 
             if (response.IsSuccessStatusCode)
