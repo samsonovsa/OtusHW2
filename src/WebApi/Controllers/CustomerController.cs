@@ -1,6 +1,6 @@
-using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using WebApi.Abstract;
 using WebApi.Models;
 
 namespace WebApi.Controllers
@@ -8,16 +8,23 @@ namespace WebApi.Controllers
     [Route("customers")]
     public class CustomerController : Controller
     {
-        [HttpGet("{id:long}")]   
-        public Task<Customer> GetCustomerAsync([FromRoute] long id)
+        private readonly ICustomerService service;
+
+        public CustomerController(ICustomerService service)
         {
-            throw new NotImplementedException();
+            this.service = service;
         }
 
-        [HttpPost("")]   
-        public Task<long> CreateCustomerAsync([FromBody] Customer customer)
+        [HttpGet("{id:long}")]   
+        public async Task<Customer> GetCustomerAsync([FromRoute] long id)
         {
-            throw new NotImplementedException();
+            return await service.GetCustomerAsync(id);
+        }
+
+        [HttpPost("create")]   
+        public async Task<long> CreateCustomerAsync([FromBody] Customer customer)
+        {
+            return await service.CreateCustomerAsync(customer);
         }
     }
 }
